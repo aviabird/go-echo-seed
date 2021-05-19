@@ -1,17 +1,23 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"os"
+
+	db "github.com/aviabird/go-echo-seed/config"
+
+	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
 )
 
 func init() {
-	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		panic(err)
+	env := os.Getenv("APP_ENV")
+
+	if env == "" {
+		env = "dev"
 	}
+
+	godotenv.Load(".env." + env)
 }
 
 func main() {
@@ -19,5 +25,9 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, Pankaj rawat")
 	})
+
+	d := db.New()
+	db.AutoMigrate(d)
+
 	e.Logger.Fatal(e.Start(os.Getenv("ADDR")))
 }

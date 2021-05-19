@@ -1,18 +1,23 @@
-include .env
+-include .env
 
-PROJECTNAME=$(shell basename "$(PWD)")
+VERSION := $(shell git describe --tags)
+BUILD := $(shell git rev-parse --short HEAD)
+PROJECTNAME := $(shell basename "$(PWD)")
 
 # Go related variables.
-GOBASE=$(shell pwd)
-GOPATH="$(GOBASE)/vendor:$(GOBASE)"
-GOBIN=$(GOBASE)/bin
-GOFILES=$(wildcard *.go)
+GOBASE := $(shell pwd)
+GOPATH := $(GOBASE)/vendor:$(GOBASE)
+GOBIN := $(GOBASE)/bin
+GOFILES := $(wildcard *.go)
+
+# Use linker flags to provide version/build settings
+LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD)"
 
 # Redirect error output to a file, so we can show it in development mode.
-STDERR=/tmp/.$(PROJECTNAME)-stderr.txt
+STDERR := /tmp/.$(PROJECTNAME)-stderr.txt
 
 # PID file will keep the process id of the server
-PID=/tmp/.$(PROJECTNAME).pid
+PID := /tmp/.$(PROJECTNAME).pid
 
 # Make is verbose in Linux. Make it silent.
 MAKEFLAGS += --silent
@@ -20,9 +25,9 @@ MAKEFLAGS += --silent
 ## install: Install missing dependencies. Runs `go get` internally. e.g; make install get=github.com/foo/bar
 install: go-get
 
-# ## start: Start in development mode. Auto-starts when code changes.
+## start: Start in development mode. Auto-starts when code changes.
 start:
-	bash -c "trap 'make stop' EXIT; $(MAKE) start-server watch run='make restart-server'"
+	@bash -c "trap 'make stop' EXIT; $(MAKE) clean compile start-server watch run='make clean compile start-server'"
 
 ## stop: Stop development mode.
 stop: stop-server
@@ -56,13 +61,14 @@ exec:
 
 ## clean: Clean build files. Runs `go clean` internally.
 clean:
-	@(MAKEFILE) go-clean
+	@-rm $(GOBIN)/$(PROJECTNAME) 2> /dev/null
+	@-$(MAKE) go-clean
 
-go-compile: go-clean go-get go-build
+go-compile: go-get go-build
 
 go-build:
 	@echo "  >  Building binary..."
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go build -o $(GOBIN)/$(PROJECTNAME) $(GOFILES)
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go build $(LDFLAGS) -o $(GOBIN)/$(PROJECTNAME) $(GOFILES)
 
 go-generate:
 	@echo "  >  Generating dependency files..."
@@ -87,4 +93,3 @@ help: Makefile
 	@echo
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
-	
