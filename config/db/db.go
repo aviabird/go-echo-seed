@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	model "github.com/aviabird/go-echo-seed/app/models"
+	"github.com/aviabird/go-echo-seed/app/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
@@ -43,6 +43,6 @@ func DropTestDB(db *gorm.DB) *gorm.DB {
 
 func AutoMigrate(db *gorm.DB) {
 	db.AutoMigrate(
-		&model.User{},
+		&models.User{},
 	)
 }

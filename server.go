@@ -1,13 +1,15 @@
 package main
 
 import (
-	"net/http"
 	"os"
 
-	db "github.com/aviabird/go-echo-seed/config"
+	"github.com/aviabird/go-echo-seed/app/controllers"
+	"github.com/aviabird/go-echo-seed/app/repo"
+	"github.com/aviabird/go-echo-seed/config/db"
+	"github.com/aviabird/go-echo-seed/config/router"
+	"github.com/aviabird/go-echo-seed/config/routes"
 
 	"github.com/joho/godotenv"
-	"github.com/labstack/echo/v4"
 )
 
 func init() {
@@ -21,13 +23,15 @@ func init() {
 }
 
 func main() {
-	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, Pankaj rawat")
-	})
+	r := router.New()
+	v1 := r.Group("/api")
 
 	d := db.New()
 	db.AutoMigrate(d)
 
-	e.Logger.Fatal(e.Start(os.Getenv("ADDR")))
+	repo := repo.InitiateRepo(d)
+	ctrls := controllers.InitiateControllers(repo)
+	routes.InitiateRoutes(v1, ctrls)
+
+	r.Logger.Fatal(r.Start(os.Getenv("ADDR")))
 }
