@@ -24,7 +24,7 @@ func init() {
 
 func main() {
 	r := router.New()
-	v1 := r.Group("/api")
+	v1 := r.Group("/api/v1")
 
 	d := db.New()
 	db.AutoMigrate(d)
